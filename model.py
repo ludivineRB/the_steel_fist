@@ -20,7 +20,7 @@ class Accesscards(SQLModel, table=True):
 
 class Registrations(SQLModel, table=True):
     registration_id: int | None = Field(default=None, primary_key=True)
-    registration_date: date = Field(nullable=False)
+    registration_date: datetime = Field(nullable=False)
 
     member_id: str = Field(default=None, foreign_key="members.member_id")
     course_id: str = Field(default=None, foreign_key="courses.course_id")
@@ -37,7 +37,7 @@ class Coaches(SQLModel, table=True):
 class Courses(SQLModel, table=True):
     course_id: int | None = Field(default=None, primary_key=True, nullable=False)
     course_name: str = Field(index=True, nullable=False)
-    time_plan: date = Field(index=True, nullable=False)
+    time_plan: datetime = Field(index=True, nullable=False)
     max_capacity: int
 
     coach_id: int | None = Field(default=None, foreign_key="coaches.coach_id")
