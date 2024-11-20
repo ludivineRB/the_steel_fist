@@ -65,7 +65,7 @@ def registrations(m):
     session = Session(engine)
     for j in range(m):
         x=Registrations(registration_id=j,
-                registration_date=fake.date_object(),
+                registration_date=fake.dategit(),
                 member_id=fake.random_number(5),
                 course_id=fake.random_number(10)
                 )
