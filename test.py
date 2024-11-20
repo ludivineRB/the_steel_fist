@@ -1,50 +1,67 @@
-from init_db import engine  # Import the existing engine
-from model import Members, Accesscards #, Coaches, Courses, Registrations  # Import existing models
-from sqlmodel import SQLModel, Field, Session, select, create_engine
+import streamlit as st
 
-# # Define a second database URL
-NEW_DATABASE_URL = "sqlite:///new_database.db"
+# Initialize session state for role
+if "role" not in st.session_state:
+    st.session_state["role"] = None
 
-# # Create the engine for the new database
-new_engine = create_engine(NEW_DATABASE_URL)
+ROLES = ["—", "User", "Admin"]
 
-# Creation of the Engine for the new database
-# sqlite_file_name = "new_database.db"
-# sqlite_url = f"sqlite:///{sqlite_file_name}"
-# new_engine = create_engine(sqlite_url, echo=True)
+def login():
+    """Login Page"""
+    st.header("Page View")
+    role = st.selectbox("Login as:", ROLES)
 
-# Define the new table model
-class NewTable(SQLModel, table=True):
-    member_name: str 
-    email: str 
-    card_id: int
-    unique_number: int
+    if st.button("Login"):
+        if role != "—":  # Prevent setting role to "—"
+            st.session_state["role"] = role
+            st.rerun()
+        else:
+            st.warning("Please select a valid role.")
 
-# Query and join data from the initial database
-with Session(engine) as session:
-    statement = (
-        select(Members, Accesscards)
-        .join(Accesscards, Members.access_card_id == Accesscards.card_id)
-    )
-    results = session.exec(statement).all()
+def logout():
+    """Logout Functionality"""
+    st.session_state["role"] = None
+    st.rerun()
 
-# Create the new table in the second database
-SQLModel.metadata.create_all(new_engine)
+# Main app logic
+role = st.session_state["role"]
 
-# Insert the joined data into the new table in the second database
-try:
-    with Session(new_engine) as session:
-        for row in results:
-            Members, Accesscards = row
-            new_entry = NewTable(
-                member_name=Members.member_name,
-                email=Members.email,
-                card_id=Members.access_card_id,
-                unique_number=Accesscards.unique_number
-            )
-            session.add(new_entry)
-        session.commit()
-except Exception as e:
-    print(f"An error occurred: {e}")
+# Create all pages
 
-print("New table created and populated in the second database successfully!")
+logout_page = st.Page(logout, title="Log out", icon=":material/logout:")
+settings = st.Page("pages/settings.py", title="Settings", icon=":material/settings:")
+users_registeration = st.Page("pages/app_members.py", title="Manage courses", icon="👤️",  default=(role == "User"))
+manage_coaches = st.Page("pages/manage_coaches.py", title="Manage coaches", icon="🏋️", default=(role == "Admin"))
+manage_courses = st.Page("pages/manage_courses.py", title="Manage courses", icon="📚️")
+view_registered_users = st.Page("pages/view_registered_users.py", title="View registered users", icon="🗒️")
+
+account_pages = [logout_page, settings]
+user_page = [users_registeration]
+admin_pages = [manage_coaches, manage_courses, view_registered_users]
+
+# # Example usage
+if st.session_state["role"] is None:
+    login()
+    
+elif st.session_state["role"] == "User":
+
+    st.sidebar.title(f"Welcome {st.session_state['role']}")
+    if st.sidebar.button("Logout"):
+        logout()
+
+    pg = st.navigation([users_registeration])
+    pg.run()
+
+    reg_button = st.button("Register")
+    if reg_button:
+
+        # Switch page
+        st.switch_page("pages/users_course_registeration")
+
+
+# elif st.session_state["role"] == "Admin":
+#     st.sidebar.title(f"Welcome {st.session_state['role']}")   
+else:
+    if st.sidebar.button("Logout"):
+        logout()
+    
