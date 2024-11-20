@@ -37,7 +37,7 @@ class Coaches(SQLModel, table=True):
 class Courses(SQLModel, table=True):
     course_id: int | None = Field(default=None, primary_key=True, nullable=False)
     course_name: str = Field(index=True, nullable=False)
-    time_plan: datetime = Field(index=True, nullable=False)
+    time_plan: date = Field(index=True, nullable=False)
     max_capacity: int
 
     coach_id: int | None = Field(default=None, foreign_key="coaches.coach_id")
