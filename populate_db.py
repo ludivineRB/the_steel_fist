@@ -1,5 +1,5 @@
 from sqlalchemy.exc import IntegrityError
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func
 from faker import Faker
 from model import Members, Coaches, Accesscards, Registrations, Courses
 from init_db import engine
@@ -88,7 +88,7 @@ def courses(courses_number):
                 card_id=fake.random_element(access),
                 course_name=random.choice(specialty_list),
                 time_plan=hour,
-                max_capacity=fake.random_number(2),
+                max_capacity=10,
                 coach_id=fake.random_element(access)
                 )
                 time_plan_list.append(hour)
@@ -102,31 +102,54 @@ courses(20)
 
 
 def registrations(m):
-    fake = Faker()
-    session = Session(engine)
-    statement= select(Members.member_id)
-    results_m = session.exec(
-            statement
+    with Session(engine) as session:
+        fake = Faker()
+        # Précharger tous les IDs des membres
+        access_m = [member for member in session.exec(select(Members.member_id)).all()]
+
+        # Précharger tous les IDs des cours
+        access_c = [course for course in session.exec(select(Courses.course_id)).all()]
+
+        # Récupérer les cours avec leur nombre actuel de participants
+        statement = (
+            select(Registrations.course_id, func.count(Registrations.member_id).label('nb_participants'))
+            .group_by(Registrations.course_id)
         )
-    access_m = results_m.all()
-    statement_c= select(Courses.course_id)
-    results_c = session.exec(
-            statement_c
-        )
-    access_c = results_c.all()
-    
-    for j in range(1, m):
-        x=Registrations(registration_id=j,
+        course_participants = {
+            row.course_id: row.nb_participants for row in session.exec(statement).all()
+        }
+
+        # Initialiser les cours non encore enregistrés dans `Registrations` à 0 participants
+        for course_id in access_c:
+            if course_id not in course_participants:
+                course_participants[course_id] = 0
+
+        # Ajouter des inscriptions de manière aléatoire
+        for _ in range(m):
+            # Sélectionner un cours aléatoire avec moins de 3 participants
+            available_courses = [course_id for course_id, count in course_participants.items() if count < 10]
+            if not available_courses:
+                print("Tous les cours sont pleins. Impossible d'ajouter plus d'inscriptions.")
+                break
+
+            random_course = random.choice(available_courses)
+            random_member = fake.random_element(access_m)
+
+            # Créer une nouvelle inscription
+            new_registration = Registrations(
                 registration_date=fake.future_datetime(),
-                member_id=fake.random_element(access_m),
-                course_id=fake.random_element(access_c)
-                )
-                
-        session.add(x)
-        try:
-            session.commit()
-        except IntegrityError:
-            session.rollback()
-registrations(21)
+                member_id=random_member,
+                course_id=random_course
+            )
 
+            session.add(new_registration)
 
+            try:
+                session.commit()
+                # Mettre à jour localement le nombre de participants pour le cours choisi
+                course_participants[random_course] += 1
+            except IntegrityError:
+                session.rollback()
+                print(f"Conflit d'intégrité lors de l'inscription du membre {random_member} au cours {random_course}.")
+registrations(100)
+#add a random number of capacity and get this number in each course_id to check now.
