@@ -5,82 +5,67 @@ from model import Members, Coaches, Accesscards, Registrations, Courses
 from utils import add_member, add_coaches, select_course
 import pandas as pd
 
-st.header("Manage coaches")
-
-#@st.cache_data
-def coach_list(refresh=False):
+def coach_list():
     with Session(engine) as session:
-        # Join query between Coaches and Courses
-        stmt = select(Coaches, Courses).join(Courses, Coaches.coach_id == Courses.coach_id)
+        stmt = select(Coaches)
         results = session.exec(stmt).all()
-
-        # Convert each row to a dictionary with keys from both Coaches and Courses
-        data = [
-            {**row.Coaches.__dict__, **row.Courses.__dict__}
-            for row in results
-        ]
-
-        # Clean up dictionary entries (remove private SQLAlchemy fields like _sa_instance_state)
+        data = [row.__dict__ for row in results]
         for entry in data:
             entry.pop('_sa_instance_state', None)
-
-        # Create DataFrame
         df = pd.DataFrame(data)
         df.index = df.index + 1
         return df
 
-def add_coach(name, specialty):
-    # Update the database
-    with Session(engine) as session:
-        new_coach = Coaches(coach_name=name, specialty=specialty)
-        session.add(new_coach)
-        session.commit()
 
-    # Update the cached dataframe in session state
-    new_row = pd.DataFrame({'name': [name], 'specialty': [specialty]})
-    st.session_state.df = pd.concat([st.session_state.df, new_row], ignore_index=True)
-
-    return f"Addition of the new coach: {name}"
-
-# Initialize session state for df
+# Initialize session state for df if not already set
 if "df" not in st.session_state:
     st.session_state.df = coach_list()
 
+# Display the current list of coaches in a dataframe
+st.write("Current List of Coaches:")
+st.dataframe(st.session_state.df)
+
 st.write("What do you want to do?")
 
+# Create buttons for Add, Modify, and Delete actions
 col1, col2, col3 = st.columns(3)
+add_button = col1.button("Add Coach")
+modify_button = col2.button("Modify Coach")
+delete_button = col3.button("Delete Coach")
+# # Check if any button is clicked and display the form accordingly
+# if add_button or modify_button or delete_button:
+#     with form_container:
+#         with st.form("add_form"):
 
-# Create buttons in columns
-add_button = col1.button("Add coach")
-modify_button = col2.button("Modify coach")
-delete_button = col3.button("Delete coach")
+if "add_form_coach" not in st.session_state:
+    st.session_state.add_form_coach = False
 
-form_container = st.container()
+if add_button:
+    st.session_state.add_form_coach = True
 
-# Check if any button is clicked and display the form accordingly
-if add_button or modify_button or delete_button:
-    with form_container:
+if st.session_state.add_form_coach:
+    with st.container():
         with st.form("add_form"):
-            st.write("This form spans the full width of the page")
-            # Add your form elements here
+            st.write("Enter details for the new coach")
             c_name = st.text_input("Enter coach name")
-            specialty_list = ["yoga", "pilates", "crossfit", "calisthenic", "body training", "athletes trainings", "zumba"]
+            specialty_list = ["Select", "yoga", "pilates", "crossfit", "calisthenic", "body training", "athletes trainings", "zumba"]
             selected_specialty = st.selectbox("Choose coach specialty", specialty_list)
-            
-            coach_add = st.form_submit_button("Add coach to database")
-        
-        if coach_add:
-            result = add_coach(c_name, selected_specialty)
-            st.success(result)
-            
-            # Refresh session state with updated database content
-            st.session_state.df = coach_list(refresh=True)
-            st.write(st.session_state.df)
+            coach_add = st.form_submit_button("Submit")
 
+            # Check if the form is submitted and specialty is valid
+            if coach_add:
+                if selected_specialty != "Select":
+                    result = add_coaches(c_name, selected_specialty)
+                    st.success(result)
+                    st.rerun()
 
+                    # Refresh the dataframe after adding a new coach
+                    st.session_state.df = coach_list()
+                    st.write("Updated List of Coaches:")
+                    st.dataframe(st.session_state.df)
+                else:
+                    st.error("Please select a valid specialty.")
 
-
-             
 
 # elif delete_button:
 #     with form_container:
@@ -91,25 +76,8 @@ if add_button or modify_button or delete_button:
 
 
 
-
-
-
 # with col2:
 #     st.button("Modify coach")
 
 # with col3:
 #     st.button("Delete coach")
-
-
-
-
-#         """Login Page"""
-#     st.header("Page View")
-#     role = st.selectbox("Login as:", ROLES)
-
-#     if st.button("Login"):
-#         if role != "—":  # Prevent setting role to "—"
-#             st.session_state["role"] = role
-#             st.rerun()
-#         else:
-#             st.warning("Please select a valid role.")
