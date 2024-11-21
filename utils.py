@@ -87,7 +87,14 @@ def delete_course(number):
         session.commit()
         validation=f"The course {number} has been removed from the database"
     return validation
-print(delete_course(1))
+#print(delete_course(2))
 
-def historic_registrations(member_Id):
-    statement=select()
+def historic_registrations(name):
+    with Session(engine) as session:
+        statement=(select(Members.member_id).where(Members.member_name==name))
+        name_id =session.exec(statement).all()
+        statementh = (select(func.count(Registrations.registration_id)).where(Registrations.member_id==name_id))
+        result=statementh
+        return result
+print(historic_registrations("Jessica Price MD"))
+    
