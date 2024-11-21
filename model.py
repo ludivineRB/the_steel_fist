@@ -20,7 +20,7 @@ class Accesscards(SQLModel, table=True):
 
 class Registrations(SQLModel, table=True):
     registration_id: int | None = Field(default=None, primary_key=True)
-    registration_date: datetime = Field(nullable=False)
+    registration_date: date = Field(nullable=False)
 
     member_id: str = Field(default=None, foreign_key="members.member_id")
     course_id: str = Field(default=None, foreign_key="courses.course_id")
@@ -32,7 +32,7 @@ class Coaches(SQLModel, table=True):
     coach_name: str = Field(index=True, nullable=False)
     specialty: str
 
-    course: Optional["Courses"] = Relationship(back_populates="coach")
+    course: list["Courses"] = Relationship(back_populates="coach")
 
 class Courses(SQLModel, table=True):
     course_id: int | None = Field(default=None, primary_key=True, nullable=False)
@@ -42,4 +42,4 @@ class Courses(SQLModel, table=True):
 
     coach_id: int | None = Field(default=None, foreign_key="coaches.coach_id")
     registration: list["Registrations"] = Relationship(back_populates="course")
-    coach: list["Coaches"] = Relationship(back_populates="course")
+    coach: Optional["Coaches"] = Relationship(back_populates="course")

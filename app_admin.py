@@ -10,21 +10,21 @@ import streamlit as st
 
 
 # Initialize session state for role
-if "role" not in st.session_state:
-    st.session_state["role"] = None
+# if "role" not in st.session_state:
+#     st.session_state["role"] = None
 
-# Debugging session state
-st.write(f"Type of st.session_state: {type(st.session_state)}")
-st.write(f"Content of st.session_state: {st.session_state}")
+# # Debugging session state
+# st.write(f"Type of st.session_state: {type(st.session_state)}")
+# st.write(f"Content of st.session_state: {st.session_state}")
 
-# Example usage
-if st.session_state["role"] is None:
-    st.write("No role assigned. Please log in.")
-    if st.button("Set Role to Admin"):
-        st.session_state["role"] = "Admin"
-        st.experimental_rerun()
+# # Example usage
+# if st.session_state["role"] is None:
+#     st.write("No role assigned. Please log in.")
+#     if st.button("Set Role to Admin"):
+#         st.session_state["role"] = "Admin"
+#         st.experimental_rerun()
 
-st.write(f"Current role: {st.session_state['role']}")
+# st.write(f"Current role: {st.session_state['role']}")
 
 # ROLES = ["—", "User", "Admin"]
 
