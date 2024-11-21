@@ -1,9 +1,10 @@
 from sqlalchemy.exc import IntegrityError
 from faker import Faker
-from sqlmodel import Session, select, func, delete
+from sqlmodel import Session, select, func, delete, and_
 from model import Members, Coaches, Accesscards, Registrations, Courses
 from init_db import engine
 import datetime
+import pandas as pd
 
 def select_course(course_name):
     with Session(engine) as session:
@@ -105,7 +106,22 @@ def historic_registrations(name):
         statement=(select(Members.member_id).where(Members.member_name==name))
         name_id =session.exec(statement).first()
         statementh = select(Registrations).where(Registrations.member_id == name_id)
-        result = session.exec(statementh).all()  # Obtenir une valeur scalaire
+        result = session.exec(statementh).all()  
         return result
 print(historic_registrations("Jessica Price MD"))
+
+def courses_week(date_begin, date_end):
+    with Session(engine) as session:
+        date_begin=datetime.datetime.fromisoformat(date_begin)
+        date_end=datetime.datetime.fromisoformat(date_end)
+        statement =(select(Courses).where(and_(Courses.time_plan > date_begin, Courses.time_plan < date_end)))
+        result = session.exec(statement).all()  
+        data = [row.__dict__ for row in result]
+        for entry in data:
+            entry.pop('_sa_instance_state', None)
+        df = pd.DataFrame(data)
+        df.index = df.index + 1
+        return df
     
+print(courses_week("2024-11-01","2024-11-08"))
+
