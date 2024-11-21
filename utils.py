@@ -89,12 +89,23 @@ def delete_course(number):
     return validation
 #print(delete_course(2))
 
+#return the number of registration for a person
+def historic_number_registrations(name):
+    with Session(engine) as session:
+        statement=(select(Members.member_id).where(Members.member_name==name))
+        name_id =session.exec(statement).first()
+        statementh = select(func.count(Registrations.registration_id)).where(Registrations.member_id == name_id)
+        result = session.exec(statementh).one()  # Obtenir une valeur scalaire
+        return result
+print(historic_number_registrations("Jessica Price MD"))
+
+#return the number of registration for a person
 def historic_registrations(name):
     with Session(engine) as session:
         statement=(select(Members.member_id).where(Members.member_name==name))
-        name_id =session.exec(statement).all()
-        statementh = (select(func.count(Registrations.registration_id)).where(Registrations.member_id==name_id))
-        result=statementh
+        name_id =session.exec(statement).first()
+        statementh = select(Registrations).where(Registrations.member_id == name_id)
+        result = session.exec(statementh).all()  # Obtenir une valeur scalaire
         return result
 print(historic_registrations("Jessica Price MD"))
     
