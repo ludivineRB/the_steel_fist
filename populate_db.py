@@ -6,12 +6,11 @@ from init_db import engine
 import random
 import datetime
 
-def member(count=20):
+def member(counter):
     fake = Faker()
     session = Session(engine)
-    i = 0
-    while i < count:
-        u = Members(member_id=fake.random_number(4),
+    for i in range(counter):
+        u = Members(#member_id=fake.random_number(4),
                  member_name=fake.name(),
                  email=fake.email(),
                  access_card_id=fake.random_number(4))
@@ -21,7 +20,7 @@ def member(count=20):
             i += 1
         except IntegrityError:
             session.rollback()
-member()
+member(20)
 
 def accesscards(n):
     fake = Faker()
@@ -55,8 +54,7 @@ def coaches(count=11):
     specialty_list = ["yoga", "pilates", "crossfit", "calisthenic", "body training", "athletes trainings", "zumba"]
     i=1
     while i < count:
-        v = Coaches(coach_id=i,
-                 coach_name=fake.name(),
+        v = Coaches(coach_name=fake.name(),
                  specialty=random.choice(specialty_list))
         session.add(v)
         try:
@@ -84,9 +82,7 @@ def courses(courses_number):
             if hour in time_plan_list:
                 continue
             else:
-                y=Courses(course_id=fake.random_number(3),
-                card_id=fake.random_element(access),
-                course_name=random.choice(specialty_list),
+                y=Courses(course_name=random.choice(specialty_list),
                 time_plan=hour,
                 max_capacity=10,
                 coach_id=fake.random_element(access)

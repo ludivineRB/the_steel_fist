@@ -10,7 +10,7 @@ class Members(SQLModel, table=True):
 
     access_card_id: int | None = Field(default=None, foreign_key="accesscards.card_id")
     access_card: Optional["Accesscards"] = Relationship(back_populates="member")
-    registration: list["Registrations"] = Relationship(back_populates="member")
+    registration: list["Registrations"] = Relationship(back_populates="member",cascade_delete=True)
 
 class Accesscards(SQLModel, table=True):
     card_id: int | None  = Field(default=None, primary_key=True, nullable=False)
@@ -32,7 +32,7 @@ class Coaches(SQLModel, table=True):
     coach_name: str = Field(index=True, nullable=False)
     specialty: str
 
-    course: Optional["Courses"] = Relationship(back_populates="coach")
+    course: Optional["Courses"] = Relationship(back_populates="coach", cascade_delete=True)
 
 class Courses(SQLModel, table=True):
     course_id: int | None = Field(default=None, primary_key=True, nullable=False)
@@ -41,5 +41,5 @@ class Courses(SQLModel, table=True):
     max_capacity: int
 
     coach_id: int | None = Field(default=None, foreign_key="coaches.coach_id")
-    registration: list["Registrations"] = Relationship(back_populates="course")
+    registration: list["Registrations"] = Relationship(back_populates="course", cascade_delete=True)
     coach: list["Coaches"] = Relationship(back_populates="course")
