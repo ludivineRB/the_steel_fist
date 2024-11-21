@@ -1,70 +1,27 @@
 import streamlit as st
-import datetime
+from init_db import engine
+from sqlmodel import Session, select, func
+from model import Members, Coaches, Accesscards, Registrations, Courses
+from utils import add_member, add_coaches, select_course
+import pandas as pd
 
-# Initialize session state for role
-if "role" not in st.session_state:
-    st.session_state["role"] = None
+def coach_list(refresh=False):
+    with Session(engine) as session:
+        # Join query between Coaches and Courses
+        stmt = select(Coaches, Courses).join(Courses, Coaches.coach_id == Courses.coach_id)
+        results = session.exec(stmt).all()
 
-ROLES = ["—", "User", "Admin"]
+        # Convert each row to a dictionary with keys from both Coaches and Courses
+        data = [
+            {**row.Coaches.__dict__, **row.Courses.__dict__}
+            for row in results
+        ]
 
-def login():
-    """Login Page"""
-    st.header("Page View")
-    role = st.selectbox("Login as:", ROLES)
+        # Clean up dictionary entries (remove private SQLAlchemy fields like _sa_instance_state)
+        for entry in data:
+            entry.pop('_sa_instance_state', None)
 
-    if st.button("Login"):
-        if role != "—":  # Prevent setting role to "—"
-            st.session_state["role"] = role
-            st.rerun()
-        else:
-            st.warning("Please select a valid role.")
-
-def logout():
-    """Logout Functionality"""
-    st.session_state["role"] = None
-    st.rerun()
-
-# Main app session state
-role = st.session_state["role"]
-
-# Create all pages
-logout_page = st.Page(logout, title="Log out", icon=":material/logout:")
-settings = st.Page("pages/settings.py", title="Settings", icon=":material/settings:")
-main = st.Page("test.py", title="Home")
-users_registeration = st.Page("app_members.py", title="User registration", icon="👤️",  default=(role == "User"))
-course_register = st.Page("pages/course_registration.py", title="Course registration", icon="📚️")
-manage_coaches = st.Page("pages/manage_coaches.py", title="Manage coaches", icon="🏋️", default=(role == "Admin"))
-manage_courses = st.Page("pages/manage_courses.py", title="Manage courses", icon="📚️")
-view_registered_users = st.Page("pages/view_registered_users.py", title="View registered users", icon="🗒️")
-
-# Group pages by users
-account_pages = [logout_page, settings]
-user_page = [users_registeration]
-admin_pages = [manage_coaches, manage_courses, view_registered_users]
-
-# Navigate pages based on session state status
-if st.session_state["role"] is None:
-    login()
-    
-elif st.session_state["role"] == "User":
-    
-    st.image("images/name1.png", width=200, use_container_width=False)
-
-    st.sidebar.title(f"Welcome {st.session_state['role']}")
-    st.sidebar.text(f"You are logged in as a {st.session_state["role"]}.")
-    if st.sidebar.button("Logout"):
-        st.session_state["login"] = True
-        logout()
-    
-    pg = st.navigation(user_page)
-    pg.run()
-
-elif st.session_state["role"] == "Admin":
-    st.sidebar.title(f"Welcome {st.session_state['role']}")
-    st.sidebar.text(f"You are logged in as an {st.session_state["role"]}.")
-    if st.sidebar.button("Logout"):
-        logout()
-
-    pg = st.navigation(admin_pages)
-    pg.run()
-    
+        # Create DataFrame
+        df = pd.DataFrame(data)
+        df.index = df.index + 1
+        return df

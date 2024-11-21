@@ -36,6 +36,7 @@ def add_coaches(name, spe):
                         specialty=spe)
     session.add(new_coaches)
     session.commit()
-    validation=f"Addition of the new coach {name}"
+    validation=f"Addition of the new coach: {name}"
     return validation
 #print(add_coaches("toto", "tennis"))
+
