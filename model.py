@@ -20,7 +20,7 @@ class Accesscards(SQLModel, table=True):
 
 class Registrations(SQLModel, table=True):
     registration_id: int | None = Field(default=None, primary_key=True)
-    registration_date: datetime = Field(nullable=False)
+    registration_date: date = Field(nullable=False)
 
     member_id: str = Field(default=None, foreign_key="members.member_id")
     course_id: str = Field(default=None, foreign_key="courses.course_id")
