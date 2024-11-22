@@ -208,4 +208,58 @@ def update_coach(coach_id, new_name=None, new_specialty=None):
         if result.rowcount == 0:
             return f"No coach with ID {coach_id} was found."
         return f"Coach ID {coach_id} updated successfully!"
-print(update_coach(13, "toto"))
+#print(update_coach(13, "toto"))
+
+def registrations(id_member, id_course):
+   
+    with Session(engine) as session:
+        
+        #recupère tous les id, comme ça le choix
+        courses = [course for course in session.exec(select(Courses.course_id)).all()]
+        #récupérer le time plan associé à un id
+        statement_time = select(Courses.time_plan).where(Courses.course_id==id_course)
+        time_plan= session.exec(statement_time).one()
+        # Récupérer le nombre actuel de participants pour chaque cours
+        statement = (
+            select(Registrations.course_id, func.count(Registrations.member_id).label('nb_participants'))
+            .group_by(Registrations.course_id)
+        )
+        course_participants = {
+            row.course_id: row.nb_participants for row in session.exec(statement).all()
+        }
+
+        # Ajouter les cours sans inscription dans le dictionnaire
+        for course_id in courses:
+            if course_id not in course_participants:
+                course_participants[course_id] = 0
+
+        if course_id in courses:
+            # Filtrer les cours disponibles (moins de 10 participants)
+            available_courses = [course_id for course_id, count in course_participants.items() if count < 10]
+
+            if not available_courses:
+                raise ValueError('All course are fulled')
+              
+
+            # Créer une nouvelle inscription
+            new_registration = Registrations(
+                registration_date=time_plan,
+                member_id=id_member,
+                course_id=id_course
+            )
+
+            session.add(new_registration)
+
+            try:
+
+                session.commit()
+       
+            except IntegrityError:
+                # Si un doublon est détecté, ignorer cette tentative
+                session.rollback()
+               
+            v=(f"Member {id_member} succesfully registered ")
+        return v
+    
+
+#print(registrations(4,9))
