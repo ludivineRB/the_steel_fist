@@ -2,7 +2,7 @@ import streamlit as st
 from init_db import engine
 from sqlmodel import Session, select, func
 from model import Members, Coaches, Accesscards, Registrations, Courses
-from utils import add_member, add_coache, select_course, add_course, delete_course, delete_member, update_members
+from utils import add_member,select_course, add_course, delete_course, delete_member, update_members
 import pandas as pd
 import datetime
 from datetime import datetime
@@ -87,6 +87,7 @@ if st.session_state.add_form_member:
                 # Refresh the dataframe after adding a new coach
                 st.session_state.df = member_list()
                 st.write("Updated List of members:")
+                st.session_state.add_form_member = False
                 st.dataframe(st.session_state.df)
 
 
@@ -105,6 +106,7 @@ if st.session_state.delete_form_member:
                 st.session_state.df = member_list()
                 st.write("Updated List of Members:")
                 st.dataframe(st.session_state.df)
+                st.session_state.delete_form_member = False
 
 if st.session_state.modify_form_member:
     with st.container():
@@ -124,6 +126,6 @@ if st.session_state.modify_form_member:
                 st.session_state.df = member_list()
                 st.write("Updated List of Members:")
                 st.dataframe(st.session_state.df)
-
+                st.session_state.modify_form_member = False
 
 #addition of checking of the date before to add a course

@@ -111,12 +111,8 @@ def add_member(name, mail, access):
 #print(add_member("toto", "toto@mail", 123456))
 
 
-def add_coache(name, spe):
 def add_course(name, date, max_participants, coach_Id):
     session=Session(engine)
-    new_coache=Coaches(coach_name=name, 
-                        specialty=spe)
-    session.add(new_coache)
     date=datetime.datetime.fromisoformat(date)
     new_course=Courses(course_name=name,
                        time_plan=date,
@@ -161,3 +157,98 @@ def historic_registrations(name):
 
 #print(historic_registrations("Jessica Price MD"))
     
+def update_members(member_id, new_name=None, new_mail=None):
+        # Préparer les champs à mettre à jour dynamiquement
+        session=Session(engine)
+        updates = {}
+        if new_name is not None:
+            updates["member_name"] = new_name
+        if new_mail is not None:
+            updates["email"] = new_mail
+
+        if not updates:
+            return "No fields to update."
+        stmt = (
+                update(Members)
+                .where(Members.member_id == member_id)
+                .values(**updates)
+            )
+        # Exécuter la requête
+        result = session.exec(stmt)
+        session.commit()
+
+        # Vérifier si une ligne a été modifiée
+        if result.rowcount == 0:
+            return f"No member with ID {member_id} was found."
+        return f"Member ID {member_id} updated successfully!"
+    
+#print(update_members(20, "Ludivine"))
+def registrations(id_member, id_course):
+   
+    with Session(engine) as session:
+        
+        #recupère tous les id, comme ça le choix
+        courses = [course for course in session.exec(select(Courses.course_id)).all()]
+        #récupérer le time plan associé à un id
+        statement_time = select(Courses.time_plan).where(Courses.course_id==id_course)
+        time_plan= session.exec(statement_time).one()
+        # Récupérer le nombre actuel de participants pour chaque cours
+        statement = (
+            select(Registrations.course_id, func.count(Registrations.member_id).label('nb_participants'))
+            .group_by(Registrations.course_id)
+        )
+        course_participants = {
+            row.course_id: row.nb_participants for row in session.exec(statement).all()
+        }
+
+        # Ajouter les cours sans inscription dans le dictionnaire
+        for course_id in courses:
+            if course_id not in course_participants:
+                course_participants[course_id] = 0
+
+        if course_id in courses:
+            # Filtrer les cours disponibles (moins de 10 participants)
+            available_courses = [course_id for course_id, count in course_participants.items() if count < 10]
+
+            if not available_courses:
+                raise ValueError('All course are fulled')
+              
+
+            # Créer une nouvelle inscription
+            new_registration = Registrations(
+                registration_date=time_plan,
+                member_id=id_member,
+                course_id=id_course
+            )
+
+            session.add(new_registration)
+
+            try:
+
+                session.commit()
+       
+            except IntegrityError:
+                # Si un doublon est détecté, ignorer cette tentative
+                session.rollback()
+               
+            v=(f"Member {id_member} succesfully registered ")
+        return v
+    
+def historic_number_registrations(name):
+    with Session(engine) as session:
+        statement=(select(Members.member_id).where(Members.member_name==name))
+        name_id =session.exec(statement).first()
+        statementh = select(func.count(Registrations.registration_id)).where(Registrations.member_id == name_id)
+        result = session.exec(statementh).one()  # Obtenir une valeur scalaire
+    return result
+print(historic_number_registrations("Jessica Price MD"))
+
+#return the number of registration for a person
+def historic_registrations(name):
+    with Session(engine) as session:
+        statement=(select(Members.member_id).where(Members.member_name==name))
+        name_id =session.exec(statement).first()
+        statementh = select(Registrations).where(Registrations.member_id == name_id)
+        result = session.exec(statementh).all()  
+    return result
+print(historic_registrations("Jessica Price MD"))

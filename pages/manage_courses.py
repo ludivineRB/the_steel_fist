@@ -2,7 +2,7 @@ import streamlit as st
 from init_db import engine
 from sqlmodel import Session, select, func
 from model import Members, Coaches, Accesscards, Registrations, Courses
-from utils import add_member, add_coache, select_course, add_course, delete_course, update_course
+from utils import add_course, delete_course
 import pandas as pd
 import datetime
 from datetime import datetime
@@ -60,7 +60,7 @@ delete_button = col3.button("Delete Course")
 #     with form_container:
 #         with st.form("add_form"):
 
-if "add_form_coach" not in st.session_state:
+if "add_form_course" not in st.session_state:
     st.session_state.add_form_course = False
 
 if "delete_form_course" not in st.session_state:
@@ -109,6 +109,7 @@ if st.session_state.add_form_course:
                     st.session_state.df = coach_list()
                     st.write("Updated List of Coaches:")
                     st.dataframe(st.session_state.df)
+                    st.session_state.add_form_course =False
                 else:
                     st.error("Please select a valid specialty.")
 
@@ -141,7 +142,7 @@ if st.session_state.modify_form_course:
             
             modify_course = st.form_submit_button("Submit")
             if modify_course:
-                result=update_members(id_modify,name,mail)
+                result=update_course(id_modify,name,mail)
                 st.success(result)
                 st.rerun()
                 st.session_state.df = member_list()
