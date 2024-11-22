@@ -71,5 +71,11 @@ Soumettez une pull request après avoir testé vos modifications.
 Ce projet est sous licence MIT. Consultez le fichier LICENSE pour plus d'informations.
 Auteur
 
-Développé par @MichAdebayo Michael Adebayo et @LudivineRB Ludivine Raby🏋️‍♀️.
+Développé par 
+@MichAdebayo
+Michael Adebayo 
+et 
+@LudivineRB
+Ludivine Raby 🏋️‍♀️.
+
 
