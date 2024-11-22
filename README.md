@@ -72,7 +72,7 @@ Auteur
 
 Développé par 
 @MichAdebayo
-MichAdebayo Michael Adebayo 
+Michael Adebayo 
 et 
 @LudivineRB
 Ludivine Raby 🏋️‍♀️.
