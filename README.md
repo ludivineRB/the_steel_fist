@@ -43,16 +43,17 @@ Démarrez le serveur Streamlit :
 L'application utilise SQLModel pour interagir avec la base de données. Voici quelques exemples de requêtes utilisées :
 
 **Rechercher l'ID d'un membre par son nom :**
-    ```bash
+    
     statement = select(Members.member_id).where(Members.member_name == name)
     name_id = session.exec(statement).first()
 
 **Compter les inscriptions d'un membre :**
-    ```bash
+    
     statementh = select(func.count(Registrations.registration_id)).where(Registrations.member_id == name_id)
 
 **La structure de la base de données inclut les tables suivantes :**
-    ```bash
+
+    
     Members : Liste des membres.
     Accesscards : Liste des accès.
     Coaches : Liste des coachs.
