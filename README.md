@@ -1,4 +1,4 @@
- Gestion de Salle de Sport
+# Gestion de la salle de sport Steel Fist
 
 Ce projet est une application de gestion de données pour une salle de sport, développée avec **SQLModel** pour la gestion des bases de données et **Streamlit** pour l'interface utilisateur. L'application offre différentes fonctionnalités en fonction des rôles des utilisateurs : **admin** ou **utilisateur standard**.
 
