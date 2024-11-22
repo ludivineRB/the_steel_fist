@@ -2,7 +2,7 @@ import streamlit as st
 from init_db import engine
 from sqlmodel import Session, select, func
 from model import Members, Coaches, Accesscards, Registrations, Courses
-from utils import add_member, add_coaches, select_course
+from utils import add_member, add_coache, select_course, delete_coach
 import pandas as pd
 
 def coach_list():
@@ -13,7 +13,7 @@ def coach_list():
         for entry in data:
             entry.pop('_sa_instance_state', None)
         df = pd.DataFrame(data)
-        df.index = df.index + 1
+        #df.index = df.index + 1
         return df
 
 
@@ -40,8 +40,16 @@ delete_button = col3.button("Delete Coach")
 if "add_form_coach" not in st.session_state:
     st.session_state.add_form_coach = False
 
+if "delete_form_coach" not in st.session_state:
+    st.session_state.delete_form_coach = False
+
 if add_button:
     st.session_state.add_form_coach = True
+    st.session_state.delete_form_coach = False
+
+if delete_button:
+    st.session_state.add_form_coach = False
+    st.session_state.delete_form_coach = True
 
 if st.session_state.add_form_coach:
     with st.container():
@@ -55,7 +63,7 @@ if st.session_state.add_form_coach:
             # Check if the form is submitted and specialty is valid
             if coach_add:
                 if selected_specialty != "Select":
-                    result = add_coaches(c_name, selected_specialty)
+                    result = add_coache(c_name, selected_specialty)
                     st.success(result)
                     st.rerun()
 
@@ -66,18 +74,20 @@ if st.session_state.add_form_coach:
                 else:
                     st.error("Please select a valid specialty.")
 
+if st.session_state.delete_form_coach:
+    with st.container():
+        with st.form("add_form"):
+            st.write("Enter details to delete a coach")
+            coach_table=coach_list()
+            coaches_list=coach_table['coach_name'].tolist()
+            coach = st.selectbox("Choose a coach", coaches_list)
+            coach_delete = st.form_submit_button("Submit")
+            if coach_delete:
+                result=delete_coach(coach)
+                st.success(result)
+                st.rerun()
+                st.session_state.df = coach_list()
+                st.write("Updated List of Coaches:")
+                st.dataframe(st.session_state.df)
 
-# elif delete_button:
-#     with form_container:
-#         with st.form("delete_form"):
-#             c_name = st.text_input("Enter coach name")
-#             list_of_all_coaches = coach_list()
-#             list_of_coaches = 
-
-
-
-# with col2:
-#     st.button("Modify coach")
-
-# with col3:
-#     st.button("Delete coach")
+#deletion works only with one row since delete function is built like this. To modify

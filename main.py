@@ -35,12 +35,13 @@ users_registeration = st.Page("app_members.py", title="User registration", icon=
 course_register = st.Page("pages/course_registration.py", title="Course registration", icon="📚️")
 manage_coaches = st.Page("pages/manage_coaches.py", title="Manage coaches", icon="🏋️", default=(role == "Admin"))
 manage_courses = st.Page("pages/manage_courses.py", title="Manage courses", icon="📚️")
+manage_members = st.Page("pages/manage_members.py", title="Manage members", icon="📚️")
 view_registered_users = st.Page("pages/view_registered_users.py", title="View registered users", icon="🗒️")
 
 # Group pages by users
 account_pages = [logout_page, settings]
 user_page = [users_registeration]
-admin_pages = [manage_coaches, manage_courses, view_registered_users]
+admin_pages = [manage_coaches, manage_courses, view_registered_users, manage_members]
 
 # Navigate pages based on session state status
 if st.session_state["role"] is None:

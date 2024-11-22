@@ -1,6 +1,6 @@
 from sqlalchemy.exc import IntegrityError
 from faker import Faker
-from sqlmodel import Session, select, func, delete, and_
+from sqlmodel import Session, select, func, delete, and_, update
 from model import Members, Coaches, Accesscards, Registrations, Courses
 from init_db import engine
 import datetime
@@ -14,6 +14,7 @@ def select_course(course_name):
         )
         access = results.all()
     return access
+
 #print(select_course("yoga"))
 
 def add_member(name, mail, access):
@@ -122,6 +123,89 @@ def courses_week(date_begin, date_end):
         df = pd.DataFrame(data)
         df.index = df.index + 1
         return df
-    
-print(courses_week("2024-11-01","2024-11-08"))
+  
+#print(courses_week("2024-11-01","2024-11-08"))  
 
+def update_course(course_id, new_specialty=None, new_date=None, new_coach_id=None, new_max_participants=None):
+    with Session(engine) as session:
+        # Préparer les champs à mettre à jour dynamiquement
+        updates = {}
+        if new_specialty is not None:
+            updates["course_name"] = new_specialty
+        if new_date is not None:
+            updates["time_plan"] = new_date
+        if new_coach_id is not None:
+            updates["coach_id"] = new_coach_id
+        if new_max_participants is not None:
+            updates["max_participants"] = new_max_participants
+
+        if not updates:
+            return "No fields to update."
+        stmt = (
+                update(Courses)
+                .where(Courses.course_id == course_id)
+                .values(**updates)
+            )
+        # Exécuter la requête
+        result = session.exec(stmt)
+        session.commit()
+
+        # Vérifier si une ligne a été modifiée
+        if result.rowcount == 0:
+            return f"No course with ID {course_id} was found."
+        return f"Course ID {course_id} updated successfully!"
+    
+#print(update_course(21, "zumba"))
+
+def update_members(member_id, new_name=None, new_mail=None):
+        # Préparer les champs à mettre à jour dynamiquement
+        session=Session(engine)
+        updates = {}
+        if new_name is not None:
+            updates["member_name"] = new_name
+        if new_mail is not None:
+            updates["email"] = new_mail
+
+        if not updates:
+            return "No fields to update."
+        stmt = (
+                update(Members)
+                .where(Members.member_id == member_id)
+                .values(**updates)
+            )
+        # Exécuter la requête
+        result = session.exec(stmt)
+        session.commit()
+
+        # Vérifier si une ligne a été modifiée
+        if result.rowcount == 0:
+            return f"No member with ID {member_id} was found."
+        return f"Member ID {member_id} updated successfully!"
+    
+#print(update_members(20, "Ludivine"))
+
+def update_coach(coach_id, new_name=None, new_specialty=None):
+        # Préparer les champs à mettre à jour dynamiquement
+        session=Session(engine)
+        updates = {}
+        if new_name is not None:
+            updates["coach_name"] = new_name
+        if new_specialty is not None:
+            updates["specialty"] = new_specialty
+
+        if not updates:
+            return "No fields to update."
+        stmt = (
+                update(Coaches)
+                .where(Coaches.coach_id == coach_id)
+                .values(**updates)
+            )
+        # Exécuter la requête
+        result = session.exec(stmt)
+        session.commit()
+
+        # Vérifier si une ligne a été modifiée
+        if result.rowcount == 0:
+            return f"No coach with ID {coach_id} was found."
+        return f"Coach ID {coach_id} updated successfully!"
+print(update_coach(13, "toto"))
