@@ -1,7 +1,6 @@
 from sqlalchemy.exc import IntegrityError, NoResultFound, SQLAlchemyError
 from faker import Faker
 from sqlmodel import Session, select, func, delete, and_, update
-from sqlmodel import Session, select, func, delete
 from model import Members, Coaches, Accesscards, Registrations, Courses
 from init_db import engine
 import datetime
@@ -107,11 +106,19 @@ def add_member(name, mail, access):
     return validation
 #print(add_member("toto", "toto@mail", 123456))
 
-    return f"Addition of the new member {name}"
-#print(add_member("toto", "toto@mail", 123456))
 
+def add_course(name:str, date:str, max_participants:int, coach_Id:int)->str:
+    """_summary_ addition of a new course
 
-def add_course(name, date, max_participants, coach_Id):
+    Args:
+        name (str): _description_ name of the specialty of the course
+        date (str): _description_ date in a format str
+        max_participants (int): _description_ 
+        coach_Id (int): _description_ 
+
+    Returns:
+        str: _description_ validation message
+    """
     session=Session(engine)
     date=datetime.datetime.fromisoformat(date)
     new_course=Courses(course_name=name,
@@ -120,11 +127,20 @@ def add_course(name, date, max_participants, coach_Id):
                        coach_id=coach_Id)
     session.add(new_course)
     session.commit()
-    return f"Addition of the course {name} at {date} with the coach {coach_Id}"
-
+    validation = f"Addition of the course {name} at {date} with the coach {coach_Id}"
+    return validation
 #print(add_course("yoga", "2024-11-26 09:00", 10, 3))
 
-def delete_member(name):
+
+def delete_member(name:str) -> str:
+    """_summary_delete an existing member from its name
+
+    Args:
+        name (str): _description_ name of an existing member
+
+    Returns:
+        str: _description_ validation message
+    """
     with Session(engine) as session:
         statement= select(Members).where(Members.member_name==name)
         results=session.exec(statement)
@@ -136,7 +152,15 @@ def delete_member(name):
 #print(delete_member('Holly Thompson'))
 
 
-def delete_course(number):
+def delete_course(number:int)-> str:
+    """_summary_ delete an existing course from a given course_id
+
+    Args:
+        number (int): _description_ id_course of a course
+
+    Returns:
+        str: _description_ validation message
+    """
     with Session(engine) as session:
         statement= select(Courses).where(Courses.course_id==number)
         results=session.exec(statement)
@@ -146,53 +170,66 @@ def delete_course(number):
         validation=f"The course {number} has been removed from the database"
     return validation
 #print(delete_course(2))
-
-def historic_registrations(name):
-    with Session(engine) as session:
-        statement=(select(Members.member_id).where(Members.member_name==name))
-        name_id =session.exec(statement).all()
-        statementh = (select(func.count(Registrations.registration_id)).where(Registrations.member_id==name_id))
-        result=statementh
-        return result
-
-#print(historic_registrations("Jessica Price MD"))
     
-def update_members(member_id, new_name=None, new_mail=None):
-        # Préparer les champs à mettre à jour dynamiquement
-        session=Session(engine)
-        updates = {}
-        if new_name is not None:
-            updates["member_name"] = new_name
-        if new_mail is not None:
-            updates["email"] = new_mail
 
-        if not updates:
-            return "No fields to update."
-        stmt = (
-                update(Members)
-                .where(Members.member_id == member_id)
-                .values(**updates)
-            )
-        # Exécuter la requête
-        result = session.exec(stmt)
-        session.commit()
+def update_members(member_id:int, new_name:str=None, new_mail:str=None)->str:
+    """_summary_ allow to modify existing members.
 
-        # Vérifier si une ligne a été modifiée
-        if result.rowcount == 0:
-            return f"No member with ID {member_id} was found."
-        return f"Member ID {member_id} updated successfully!"
-    
+    Args:
+        member_id (int): _description_ id of an existing member
+        new_name (str, optional): _description_. Defaults to None. 
+        new_mail (str, optional): _description_. Defaults to None.
+
+    Returns:
+        str: _description_ validation message
+    """
+    # Préparer les champs à mettre à jour dynamiquement
+    session=Session(engine)
+    updates = {}
+    if new_name is not None:
+        updates["member_name"] = new_name
+    if new_mail is not None:
+        updates["email"] = new_mail
+
+    if not updates:
+        return "No fields to update."
+    stmt = (
+            update(Members)
+            .where(Members.member_id == member_id)
+            .values(**updates)
+        )
+    # Exécuter la requête
+    result = session.exec(stmt)
+    session.commit()
+
+    # Vérifier si une ligne a été modifiée
+    if result.rowcount == 0:
+        return f"No member with ID {member_id} was found."
+    validation = f"Member ID {member_id} updated successfully!"
+    return validation
 #print(update_members(20, "Ludivine"))
-def registrations(id_member, id_course):
-   
+
+
+def registrations(id_member:int, id_course:int)->str:
+    """_summary_ function to create registration to a course with a member_id and a course_id
+
+    Args:
+        id_member (int): _description_ 
+        id_course (int): _description_
+
+    Raises:
+        ValueError: _description_ Can not add a registration to a course if the number of participants is greater than the capacity
+
+    Returns:
+        str: _description_ validation message
+    """
     with Session(engine) as session:
-        
-        #recupère tous les id, comme ça le choix
+        #get all the courses_id
         courses = [course for course in session.exec(select(Courses.course_id)).all()]
-        #récupérer le time plan associé à un id
+        #get the time plan associated with the id_course
         statement_time = select(Courses.time_plan).where(Courses.course_id==id_course)
         time_plan= session.exec(statement_time).one()
-        # Récupérer le nombre actuel de participants pour chaque cours
+        # get the actual number of participants per course
         statement = (
             select(Registrations.course_id, func.count(Registrations.member_id).label('nb_participants'))
             .group_by(Registrations.course_id)
@@ -200,55 +237,64 @@ def registrations(id_member, id_course):
         course_participants = {
             row.course_id: row.nb_participants for row in session.exec(statement).all()
         }
-
-        # Ajouter les cours sans inscription dans le dictionnaire
+        # addition of the courses without any participants in the course
         for course_id in courses:
             if course_id not in course_participants:
                 course_participants[course_id] = 0
 
+        # Filter courses with less than  participants
         if course_id in courses:
-            # Filtrer les cours disponibles (moins de 10 participants)
             available_courses = [course_id for course_id, count in course_participants.items() if count < 10]
-
+            #raise error if course is full
             if not available_courses:
-                raise ValueError('All course are fulled')
-              
-
-            # Créer une nouvelle inscription
+                raise ValueError('All course are full')
+            
+            # Create a new registrations
             new_registration = Registrations(
                 registration_date=time_plan,
                 member_id=id_member,
                 course_id=id_course
             )
-
             session.add(new_registration)
-
             try:
-
                 session.commit()
-       
             except IntegrityError:
-                # Si un doublon est détecté, ignorer cette tentative
+                # prevent the double registrations
                 session.rollback()
-               
             v=(f"Member {id_member} succesfully registered ")
         return v
     
-def historic_number_registrations(name):
+
+def historic_number_registrations(name:str)->int:
+    """_summary_ Return a count of registrations for a given member (name)
+
+    Args:
+        name (str): _description_ name of the member, should be the same that the creation of the member
+
+    Returns:
+        int: _description_ return the number of inscription
+    """
     with Session(engine) as session:
         statement=(select(Members.member_id).where(Members.member_name==name))
         name_id =session.exec(statement).first()
         statementh = select(func.count(Registrations.registration_id)).where(Registrations.member_id == name_id)
         result = session.exec(statementh).one()  # Obtenir une valeur scalaire
     return result
-print(historic_number_registrations("Jessica Price MD"))
+#print(historic_number_registrations("Jessica Price MD"))
 
-#return the number of registration for a person
-def historic_registrations(name):
+
+def historic_registrations(name:str):
+    """_summary_ function to register and show all the registrations for a given member(name)
+    Args:
+        name (str): _description_ name of the member, should be the same that the creation of the member
+
+    Returns:
+        _type_: _description_ list of object registrations for the member
+    """
     with Session(engine) as session:
         statement=(select(Members.member_id).where(Members.member_name==name))
         name_id =session.exec(statement).first()
         statementh = select(Registrations).where(Registrations.member_id == name_id)
         result = session.exec(statementh).all()  
     return result
-print(historic_registrations("Jessica Price MD"))
+#print(historic_registrations("Jessica Price MD"))
