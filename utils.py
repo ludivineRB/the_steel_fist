@@ -7,7 +7,7 @@ import pandas as pd
 import random
 
 
-def all_coach_info():
+def all_coach_info():  
     """Retrieve all coach information from the database."""
     try:
         with Session(engine) as session:
